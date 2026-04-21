@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор телетрафика · Моносервисные узлы</title>
+    <!-- Твои основные стили -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Дополнительные стили именно для калькулятора (поверх main.css) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calculator.css') }}">
+    <link rel="icon" href="data:,">
+</head>
+<body class="page">
+    <div class="content">
+        <header style="margin-bottom: 2rem; text-align: center;">
+            <h1 style="font-size: 2.2rem; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                <i class="fa fa-calculator"></i> 
+                Калькулятор характеристик пропускной способности
+            </h1>
+            <p style="color: #b0b0b0; margin-top: 0.5rem;">
+                Эрланг B · Энгсет · Эрланг C · Групповое поступление · Резервирование
+            </p>
+        </header>
+
+        <main class="calculator-card">
+            <form method="POST" id="calc-form">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fa fa-cubes"></i> {{ form.model.label.text }}</label>
+                        {{ form.model(id="model", class="form-control") }}
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-tasks"></i> {{ form.task.label.text }}</label>
+                        {{ form.task(id="task", class="form-control") }}
+                    </div>
+                </div>
+                
+                <!-- Динамические поля -->
+                <div id="input-fields" class="input-panel"></div>
+                
+                <div class="form-actions">
+                    {{ form.submit(class="btn btn-calculate") }}
+                </div>
+            </form>
+            
+            <div id="result" class="result-area">
+                {% if result %}
+                    <div class="result-header">
+                        <i class="fa fa-bar-chart"></i> Результат
+                    </div>
+                    <pre class="result-json">{{ result | tojson(indent=2) }}</pre>
+                {% else %}
+                    <div class="result-placeholder">
+                        <i class="fa fa-arrow-up"></i> Выберите модель и задачу, введите параметры
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer style="margin-top: 3rem; text-align: center; color: #888; font-size: 0.85rem;">
+            <span><i class="fa fa-code"></i> Теория телетрафика, курсовая работа</span>
+            <span style="margin: 0 1rem;">|</span>
+            <span><i class="fa fa-university"></i> МТУСИ</span>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+</body>
+</html>

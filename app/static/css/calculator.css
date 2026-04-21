@@ -1,0 +1,178 @@
+/* ===== Дополнительные стили для калькулятора (поверх main.css) ===== */
+
+.calculator-card {
+    background: #24292e;          /* чуть светлее основного фона */
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid #3a4046;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    flex: 1 1 200px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #d0d0d0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+}
+
+.form-group label i {
+    margin-right: 6px;
+    color: #ffc107;   /* акцентный цвет из main.css */
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    background: #1a1e1f;
+    border: 2px solid #3a4046;
+    border-radius: 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    color: #f0f0f0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #ffc107;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+}
+
+/* Панель с динамическими полями */
+.input-panel {
+    background: #1e2327;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px dashed #4a555e;
+}
+
+.input-panel > div {
+    margin-bottom: 18px;
+}
+
+.input-panel label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #ccc;
+}
+
+.input-panel input {
+    width: 100%;
+    padding: 12px 15px;
+    background: #0f1214;
+    border: 2px solid #2e353b;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #fff;
+    transition: all 0.2s;
+}
+
+.input-panel input:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15);
+    outline: none;
+}
+
+/* Кнопка */
+.btn-calculate {
+    display: inline-block;
+    padding: 14px 36px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #ffc107;
+    color: #1a1e1f;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-calculate:hover {
+    background: #ffdb6e;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+}
+
+.btn-calculate:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.form-actions {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Блок результата */
+.result-area {
+    background: #1b2024;
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid #3a4248;
+}
+
+.result-header {
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #ffc107;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.result-placeholder {
+    color: #9aa5b0;
+    font-style: italic;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.result-json {
+    background: #0e1215;
+    color: #e3eaf0;
+    padding: 20px;
+    border-radius: 14px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    margin: 0;
+    border: 1px solid #2a3238;
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+    .calculator-card {
+        padding: 20px;
+    }
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .btn-calculate {
+        width: 100%;
+    }
+}

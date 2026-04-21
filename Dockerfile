@@ -1,14 +1,12 @@
-FROM python:3.11.14
+FROM python:3.11-slim
 
 WORKDIR /app
 
-ADD . /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN apt-get update && apt-get install -y gcc
+COPY . .
 
+EXPOSE 5000
 
-RUN pip install --upgrade pip setuptools
-
-RUN pip install -r requirements.txt
-
-CMD ["uwsgi", "app.ini"]
+CMD ["flask", "run", "--host=0.0.0.0"]

@@ -1,15 +1,8 @@
 services:
   flask:
     build: .
-    container_name: flask-calc
+    container_name: flask-calculator
     env_file:
       - .env
-    expose:
-      - 8080
-  nginx:
-    build: ./nginx
-    container_name: nginx-calc
-    depends_on:
-      - flask
     ports:
-      - "8080:80"
+      - "5000:5000"

@@ -16,7 +16,7 @@
                 Калькулятор характеристик пропускной способности
             </h1>
             <p style="color: #b0b0b0; margin-top: 0.5rem;">
-                Эрланг B · Энгсет · Эрланг C · Групповое поступление
+                Эрланг B · Энгсет · Эрланг C · Эрланг A · Групповое поступление
             </p>
         </header>
 
@@ -38,13 +38,25 @@
                     {{ form.submit(class="btn btn-calculate") }}
                 </div>
             </form>
+            
             <div id="result" class="result-area">
                 {% if readable %}
                     <div class="result-header">
                         <i class="fa fa-bar-chart"></i> Результат
                     </div>
-                    <div class="result-readable">{{ readable | safe }}</div>
-                    <div class="explanation">{{ explanation }}</div>
+                    <div class="result-big">{{ readable | safe }}</div>
+                    <div class="explanation">{{ explanation | safe | replace('\n', '<br>') | replace('  ', '&nbsp;&nbsp;') }}</div>
+                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" class="btn-small" onclick="copyResult()">
+                            <i class="fa fa-copy"></i> Копировать
+                        </button>
+                        <a href="{{ url_for('main.graph') }}" target="_blank" class="btn-small">
+                            <i class="fa fa-line-chart"></i> График
+                        </a>
+                        <a href="{{ url_for('main.compare') }}" target="_blank" class="btn-small">
+                            <i class="fa fa-bar-chart"></i> Сравнить
+                        </a>
+                    </div>
                 {% else %}
                     <div class="result-placeholder">
                         <i class="fa fa-arrow-up"></i> Выберите модель и задачу, введите параметры

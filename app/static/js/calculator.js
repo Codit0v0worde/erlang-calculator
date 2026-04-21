@@ -11,66 +11,69 @@ document.addEventListener('DOMContentLoaded', function() {
         let html = '';
 
         if (task === 'direct') {
-            if (model === 'erlang' || model === 'engset' || model === 'erlang_c' || model === 'batch') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Число каналов v:</label> <input type="number" name="v" required></div>';
+            if (model === 'erlang' || model === 'engset' || model === 'erlang_c' || model === 'erlang_a' || model === 'batch') {
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 5" required></div>';
+                html += '<div><label>Число каналов v:</label> <input type="number" name="v" placeholder="например: 10" required></div>';
             }
             if (model === 'engset') {
-                html += '<div><label>Число источников N:</label> <input type="number" name="N" required></div>';
+                html += '<div><label>Число источников N:</label> <input type="number" name="N" placeholder="например: 20" required></div>';
+            }
+            if (model === 'erlang_a') {
+                html += '<div><label>Интенсивность уходов θ:</label> <input type="number" step="0.01" name="theta" placeholder="например: 0.1" required></div>';
             }
             if (model === 'batch') {
-                html += '<div><label>Размер группы k:</label> <input type="number" name="k" required></div>';
+                html += '<div><label>Размер группы k:</label> <input type="number" name="k" placeholder="например: 2" required></div>';
             }
-        }
-        else if (task === 'inverse_p') {
+        } else if (task === 'inverse_p') {
             if (model === 'erlang' || model === 'erlang_c') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" required></div>';
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 5" required></div>';
+                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" placeholder="например: 0.01" required></div>';
+            } else if (model === 'engset') {
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 0.1" required></div>';
+                html += '<div><label>Число источников N:</label> <input type="number" name="N" placeholder="например: 20" required></div>';
+                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" placeholder="например: 0.01" required></div>';
+            } else if (model === 'erlang_a') {
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 5" required></div>';
+                html += '<div><label>Интенсивность уходов θ:</label> <input type="number" step="0.01" name="theta" placeholder="например: 0.1" required></div>';
+                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" placeholder="например: 0.01" required></div>';
+            } else if (model === 'batch') {
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 2" required></div>';
+                html += '<div><label>Размер группы k:</label> <input type="number" name="k" placeholder="например: 2" required></div>';
+                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" placeholder="например: 0.01" required></div>';
             }
-            else if (model === 'engset') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Число источников N:</label> <input type="number" name="N" required></div>';
-                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" required></div>';
-            }
-            else if (model === 'batch') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Размер группы k:</label> <input type="number" name="k" required></div>';
-                html += '<div><label>Целевая вероятность p:</label> <input type="number" step="0.0001" name="p_target" required></div>';
-            }
-        }
-        else if (task === 'inverse_m') {
+        } else if (task === 'inverse_m') {
             if (model === 'erlang' || model === 'erlang_c') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Целевое среднее m:</label> <input type="number" step="0.1" name="m_target" required></div>';
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 5" required></div>';
+                html += '<div><label>Целевое среднее m:</label> <input type="number" step="0.1" name="m_target" placeholder="например: 4.5" required></div>';
+            } else if (model === 'engset') {
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 0.1" required></div>';
+                html += '<div><label>Число источников N:</label> <input type="number" name="N" placeholder="например: 20" required></div>';
+                html += '<div><label>Целевое среднее m:</label> <input type="number" step="0.1" name="m_target" placeholder="например: 2" required></div>';
+            } else if (model === 'batch') {
+                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" placeholder="например: 2" required></div>';
+                html += '<div><label>Размер группы k:</label> <input type="number" name="k" placeholder="например: 2" required></div>';
+                html += '<div><label>Целевое среднее m:</label> <input type="number" step="0.1" name="m_target" placeholder="например: 3" required></div>';
             }
-            else if (model === 'engset') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Число источников N:</label> <input type="number" name="N" required></div>';
-                html += '<div><label>Целевое среднее m:</label> <input type="number" step="0.1" name="m_target" required></div>';
-            }
-            else if (model === 'batch') {
-                html += '<div><label>Нагрузка a (Эрл):</label> <input type="number" step="0.01" name="a" required></div>';
-                html += '<div><label>Размер группы k:</label> <input type="number" name="k" required></div>';
-                html += '<div><label>Целевое среднее m:</label> <input type="number" step="0.1" name="m_target" required></div>';
-            }
-        }
-        else if (task === 'overload') {
+        } else if (task === 'overload') {
             if (model === 'erlang' || model === 'erlang_c') {
-                html += '<div><label>Число каналов v:</label> <input type="number" name="v" required></div>';
-                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" required></div>';
-                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" required></div>';
-            }
-            else if (model === 'engset') {
-                html += '<div><label>Число каналов v:</label> <input type="number" name="v" required></div>';
-                html += '<div><label>Число источников N:</label> <input type="number" name="N" required></div>';
-                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" required></div>';
-                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" required></div>';
-            }
-            else if (model === 'batch') {
-                html += '<div><label>Число каналов v:</label> <input type="number" name="v" required></div>';
-                html += '<div><label>Размер группы k:</label> <input type="number" name="k" required></div>';
-                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" required></div>';
-                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" required></div>';
+                html += '<div><label>Число каналов v:</label> <input type="number" name="v" placeholder="например: 10" required></div>';
+                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" placeholder="например: 0.05" required></div>';
+                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" placeholder="например: 0.01" required></div>';
+            } else if (model === 'engset') {
+                html += '<div><label>Число каналов v:</label> <input type="number" name="v" placeholder="например: 5" required></div>';
+                html += '<div><label>Число источников N:</label> <input type="number" name="N" placeholder="например: 20" required></div>';
+                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" placeholder="например: 0.05" required></div>';
+                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" placeholder="например: 0.01" required></div>';
+            } else if (model === 'erlang_a') {
+                html += '<div><label>Число каналов v:</label> <input type="number" name="v" placeholder="например: 10" required></div>';
+                html += '<div><label>Интенсивность уходов θ:</label> <input type="number" step="0.01" name="theta" placeholder="например: 0.1" required></div>';
+                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" placeholder="например: 0.05" required></div>';
+                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" placeholder="например: 0.01" required></div>';
+            } else if (model === 'batch') {
+                html += '<div><label>Число каналов v:</label> <input type="number" name="v" placeholder="например: 10" required></div>';
+                html += '<div><label>Размер группы k:</label> <input type="number" name="k" placeholder="например: 2" required></div>';
+                html += '<div><label>Измеренная p*:</label> <input type="number" step="0.0001" name="p_measured" placeholder="например: 0.05" required></div>';
+                html += '<div><label>Нормативная p:</label> <input type="number" step="0.0001" name="p_norm" placeholder="например: 0.01" required></div>';
             }
         }
         inputFieldsDiv.innerHTML = html;
@@ -94,8 +97,19 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.error) {
                 html += `<div class="result-error">${data.error}</div>`;
             } else {
-                html += `<div class="result-readable">${data.readable}</div>`;
-                html += `<div class="explanation">${data.explanation}</div>`;
+                html += `<div class="result-big">${data.readable}</div>`;
+                html += `<div class="explanation">${data.explanation.replace(/\n/g, '<br>')}</div>`;
+                html += `<div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                    <button type="button" class="btn-small" onclick="copyResult()">
+                        <i class="fa fa-copy"></i> Копировать
+                    </button>
+                    <a href="/graph" target="_blank" class="btn-small">
+                        <i class="fa fa-line-chart"></i> График
+                    </a>
+                    <a href="/compare" target="_blank" class="btn-small">
+                        <i class="fa fa-bar-chart"></i> Сравнить
+                    </a>
+                </div>`;
             }
             resultDiv.innerHTML = html;
         })
@@ -104,3 +118,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function copyResult() {
+    const resultText = document.querySelector('.result-big')?.innerText || '';
+    const explanationText = document.querySelector('.explanation')?.innerText || '';
+    const fullText = resultText + '\n\n' + explanationText;
+    navigator.clipboard.writeText(fullText).then(() => {
+        alert('Результат скопирован в буфер обмена!');
+    }).catch(err => {
+        alert('Не удалось скопировать');
+    });
+}

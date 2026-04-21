@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сравнение моделей · Калькулятор телетрафика</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calculator.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+        }
+        .page {
+            width: 100%;
+        }
+        .content {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 20px 30px !important;
+            box-sizing: border-box;
+        }
+        .calculator-card {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 25px !important;
+            box-sizing: border-box;
+        }
+        .chart-container {
+            position: relative;
+            width: 100% !important;
+            height: 600px;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .note {
+            background: #1e2a32;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            color: #cdd9e6;
+        }
+        .note strong {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body class="page">
+    <div class="content">
+        <header style="margin-bottom: 2rem;">
+            <a href="{{ url_for('main.index') }}" style="color: #ffc107; text-decoration: none;">
+                <i class="fa fa-arrow-left"></i> Назад к калькулятору
+            </a>
+            <h1 style="margin-top: 1rem;">Сравнение моделей</h1>
+            <p style="color: #b0b0b0;">Нагрузка a = {{ a }} Эрл</p>
+            <p style="color: #6c859c; font-size: 0.9rem;">
+                Параметры: N = {{ N }} (Энгсет), θ = {{ theta }} (Эрланг A), k = {{ k }} (групповое)
+            </p>
+        </header>
+
+        <div class="calculator-card">
+            <div class="chart-container">
+                <canvas id="compareChart"></canvas>
+            </div>
+            
+            <div class="note">
+                <strong><i class="fa fa-info-circle"></i> Модели на графике:</strong><br>
+                • <strong>Эрланг B</strong> — вероятность блокировки (вызов отклоняется)<br>
+                • <strong>Эрланг C</strong> — вероятность ожидания (вызов ставится в очередь)<br>
+                • <strong>Эрланг A</strong> — с учётом уходов из очереди (θ = {{ theta }})<br>
+                • <strong>Энгсет</strong> — конечное число источников (N = {{ N }})<br>
+                • <strong>Групповое поступление</strong> — заявки приходят группами по k = {{ k }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const compareData = {{ compare_data | safe }};
+        
+        const canvas = document.getElementById('compareChart');
+        const ctx = canvas.getContext('2d');
+        
+        const container = canvas.parentElement;
+        canvas.style.width = '100%';
+        canvas.style.height = '600px';
+        canvas.width = container.clientWidth;
+        canvas.height = 600;
+        
+        const colors = [
+            { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.1)' },
+            { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },
+            { border: 'rgb(255, 206, 86)', bg: 'rgba(255, 206, 86, 0.1)' },
+            { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },
+            { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.1)' }
+        ];
+        
+        const datasets = [];
+        let colorIndex = 0;
+        
+        const modelOrder = ['erlang', 'engset', 'erlang_c', 'erlang_a', 'batch'];
+        
+        for (const model of modelOrder) {
+            if (compareData[model]) {
+                const data = compareData[model];
+                datasets.push({
+                    label: data.name,
+                    data: data.p,
+                    borderColor: colors[colorIndex].border,
+                    backgroundColor: colors[colorIndex].bg,
+                    borderWidth: 3,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                });
+                colorIndex++;
+            }
+        }
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: compareData.erlang.v,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: `Сравнение вероятностей для всех моделей (a = {{ a }} Эрл)`, 
+                        color: '#e3eaf0',
+                        font: { size: 18 }
+                    },
+                    legend: { 
+                        labels: { color: '#e3eaf0', font: { size: 12 } },
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Число каналов v', color: '#e3eaf0', font: { size: 14 } }, 
+                        ticks: { color: '#e3eaf0', font: { size: 12 } }, 
+                        grid: { color: '#3a4248' } 
+                    },
+                    y: { 
+                        title: { display: true, text: 'Вероятность P', color: '#e3eaf0', font: { size: 14 } }, 
+                        min: 0, 
+                        max: 1, 
+                        ticks: { color: '#e3eaf0', stepSize: 0.1, font: { size: 12 } }, 
+                        grid: { color: '#3a4248' } 
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            canvas.width = container.clientWidth;
+        });
+    </script>
+</body>
+</html>

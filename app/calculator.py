@@ -117,6 +117,59 @@ def find_a_erlang_c(v, p_target, max_a=1000.0, step=0.01):
         a += step
     return max_a
 
+# ---------- Эрланг A (с нетерпеливыми клиентами) ----------
+def erlang_a(v, a, theta):
+    if v == 0:
+        return {'p_wait': 1.0, 'p_ab': 1.0, 'm': 0.0}
+    pb = erlang_b(v, a)
+    rho = a / v
+    if theta > 0:
+        if rho >= 1.0:
+            p_wait = 1.0
+        else:
+            numerator = pb
+            denominator = 1 - rho + rho * pb
+            p_wait = numerator / denominator if denominator > 0 else 1.0
+    else:
+        p_wait = erlang_c(v, a)
+    if p_wait > 0 and theta > 0:
+        p_ab = p_wait * (theta / (1 + theta))
+    else:
+        p_ab = 0.0
+    m = a * (1 - p_ab)
+    return {'p_wait': round(p_wait, 6), 'p_ab': round(p_ab, 6), 'm': round(m, 4)}
+
+def erlang_a_inv_v_p(a, theta, p_target, max_v=1000):
+    for v in range(max(1, int(a) + 1), max_v + 1):
+        result = erlang_a(v, a, theta)
+        if result['p_wait'] <= p_target:
+            return v
+    return max_v
+
+def erlang_a_inv_v_m(a, theta, m_target, max_v=1000):
+    """Подбор v для Эрланга A по целевому m"""
+    for v in range(max(1, int(a) + 1), max_v + 1):
+        res = erlang_a(v, a, theta)
+        if res['m'] >= m_target:
+            return v
+    return max_v
+
+def erlang_a_overload(v, theta, p_measured, p_norm):
+    a_meas = find_a_erlang_a(v, theta, p_measured)
+    a_norm = find_a_erlang_a(v, theta, p_norm)
+    if a_meas == 0:
+        return 0.0
+    return (a_meas - a_norm) / a_meas * 100
+
+def find_a_erlang_a(v, theta, p_target, max_a=1000.0, step=0.01):
+    a = 0.0
+    while a <= max_a:
+        result = erlang_a(v, a, theta)
+        if result['p_wait'] >= p_target:
+            return a
+        a += step
+    return max_a
+
 # ---------- Групповое поступление ----------
 def batch_erlang_b(v, a, k):
     return erlang_b(v, a * k)
@@ -149,3 +202,38 @@ def find_a_batch(v, k, p_target, max_a=1000.0, step=0.01):
             return a
         a += step
     return max_a
+
+# ---------- Данные для графиков ----------
+def get_graph_data(model, a, max_v, N=None, k=None, theta=None):
+    v_values = list(range(1, max_v + 1))
+    p_values = []
+    m_values = []
+    
+    for v in v_values:
+        if model == 'erlang':
+            p = erlang_b(v, a)
+            m = a * (1 - p)
+        elif model == 'engset' and N:
+            p = engset_b(v, a, N)
+            p_states = [1.0]
+            for i in range(1, v + 1):
+                p_states.append(p_states[-1] * (N - i + 1) * a / i)
+            sum_p = sum(p_states)
+            m = sum(i * p_states[i] for i in range(v + 1)) / sum_p if sum_p > 0 else 0
+        elif model == 'erlang_c':
+            p = erlang_c(v, a)
+            m = a
+        elif model == 'erlang_a' and theta is not None:
+            res = erlang_a(v, a, theta)
+            p = res['p_wait']
+            m = res['m']
+        elif model == 'batch' and k:
+            p = batch_erlang_b(v, a, k)
+            m = a * k * (1 - p)
+        else:
+            p = 0
+            m = 0
+        p_values.append(round(p, 6))
+        m_values.append(round(m, 4))
+    
+    return {'v': v_values, 'p': p_values, 'm': m_values}

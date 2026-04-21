@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>График · Калькулятор телетрафика</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calculator.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Сбрасываем все ограничения ширины */
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+        }
+        .page {
+            width: 100%;
+        }
+        .content {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 20px 30px !important;
+            box-sizing: border-box;
+        }
+        .calculator-card {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 25px !important;
+            box-sizing: border-box;
+        }
+        .chart-container {
+            position: relative;
+            width: 100% !important;
+            height: 600px;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body class="page">
+    <div class="content">
+        <header style="margin-bottom: 2rem;">
+            <a href="{{ url_for('main.index') }}" style="color: #ffc107; text-decoration: none;">
+                <i class="fa fa-arrow-left"></i> Назад к калькулятору
+            </a>
+            <h1 style="margin-top: 1rem;">{{ model }}</h1>
+            <p style="color: #b0b0b0;">{{ task }}</p>
+            <p style="color: #b0b0b0;">Нагрузка a = {{ a }} Эрл</p>
+            {% if is_inverse %}
+                <p style="color: #4caf50;">▼ Оптимальное v ≈ {{ v }}</p>
+            {% endif %}
+        </header>
+
+        <div class="calculator-card">
+            <div class="chart-container">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const graphData = {{ graph_data | safe }};
+        const isInverse = {{ 'true' if is_inverse else 'false' }};
+        const optimalV = {{ v }};
+        
+        const canvas = document.getElementById('trafficChart');
+        const ctx = canvas.getContext('2d');
+        
+        // Принудительно задаём размеры canvas
+        const container = canvas.parentElement;
+        canvas.style.width = '100%';
+        canvas.style.height = '600px';
+        canvas.width = container.clientWidth;
+        canvas.height = 600;
+        
+        const datasets = [{
+            label: 'Вероятность P',
+            data: graphData.p,
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            borderWidth: 3,
+            tension: 0.2,
+            yAxisID: 'y',
+            pointRadius: 0,
+            pointHoverRadius: 6
+        }, {
+            label: 'Среднее число каналов m',
+            data: graphData.m,
+            borderColor: 'rgb(54, 162, 235)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            borderWidth: 3,
+            tension: 0.2,
+            yAxisID: 'y1',
+            pointRadius: 0,
+            pointHoverRadius: 6
+        }];
+        
+        const plugins = [];
+        if (isInverse) {
+            plugins.push({
+                id: 'verticalLine',
+                afterDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+                    const x = xAxis.getPixelForValue(optimalV);
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#4caf50';
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#4caf50';
+                    ctx.font = 'bold 14px Montserrat';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`v = ${optimalV}`, x, yAxis.top + 25);
+                    ctx.restore();
+                }
+            });
+        }
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: graphData.v,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: 'Зависимость характеристик от числа каналов v', 
+                        color: '#e3eaf0',
+                        font: { size: 18 }
+                    },
+                    legend: { 
+                        labels: { color: '#e3eaf0', font: { size: 13 } },
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Число каналов v', color: '#e3eaf0', font: { size: 14 } }, 
+                        ticks: { color: '#e3eaf0', font: { size: 12 } }, 
+                        grid: { color: '#3a4248' } 
+                    },
+                    y: { 
+                        type: 'linear', 
+                        display: true, 
+                        position: 'left',
+                        title: { display: true, text: 'Вероятность', color: '#e3eaf0', font: { size: 14 } }, 
+                        min: 0, 
+                        max: 1, 
+                        ticks: { color: '#e3eaf0', stepSize: 0.1, font: { size: 12 } }, 
+                        grid: { color: '#3a4248' } 
+                    },
+                    y1: { 
+                        type: 'linear', 
+                        display: true, 
+                        position: 'right',
+                        title: { display: true, text: 'Среднее число каналов m', color: '#e3eaf0', font: { size: 14 } }, 
+                        ticks: { color: '#e3eaf0', font: { size: 12 } }, 
+                        grid: { drawOnChartArea: false } 
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            },
+            plugins: plugins
+        });
+        
+        // Дополнительно: при изменении размера окна обновляем canvas
+        window.addEventListener('resize', () => {
+            canvas.width = container.clientWidth;
+        });
+    </script>
+</body>
+</html>

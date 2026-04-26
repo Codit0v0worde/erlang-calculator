@@ -18,6 +18,8 @@ def format_readable(result):
             lines.append(f"Среднее число занятых каналов: {value:.4f}")
         elif key == 'v_opt':
             lines.append(f"Необходимое число каналов: {value}")
+        elif key == 'r_opt':
+            lines.append(f"Резервных каналов: {value}")
         elif key == 'reduction_percent':
             lines.append(f"Доля выгружаемой нагрузки: {value:.2f}%")
         elif key == 'message':
@@ -31,12 +33,12 @@ def index():
     form = CalculatorForm()
     readable = None
     explanation = ""
-    
+
     if form.validate_on_submit():
         model = form.model.data
         task = form.task.data
         result = None
-        
+
         params_for_graph = {
             'model': model,
             'task': task,
@@ -45,19 +47,20 @@ def index():
             'N': int(form.N.data) if form.N.data else 20,
             'k': int(form.k.data) if form.k.data else 2,
             'theta': float(form.theta.data) if form.theta.data else 0.1,
+            'r': int(form.r.data) if form.r.data else 0,
             'p_target': float(form.p_target.data) if form.p_target.data else None,
             'm_target': float(form.m_target.data) if form.m_target.data else None,
             'p_measured': float(form.p_measured.data) if form.p_measured.data else None,
             'p_norm': float(form.p_norm.data) if form.p_norm.data else None
         }
         session['graph_params'] = params_for_graph
-        
+
         try:
             # ========== ПРЯМАЯ ЗАДАЧА ==========
             if task == 'direct':
                 a = float(form.a.data or 0)
                 v = int(form.v.data or 0)
-                
+
                 if model == 'erlang':
                     p = calculator.erlang_b(v, a)
                     m = a * (1 - p)
@@ -68,7 +71,6 @@ def index():
                         f"• Вероятность блокировки p = {round(p, 6)} ({round(p*100, 2)}% вызовов получат отказ)\n"
                         f"• Среднее число занятых каналов m = a·(1-p) = {a}·(1-{round(p, 4)}) = {round(m, 4)}"
                     )
-                
                 elif model == 'engset':
                     N = int(form.N.data or 1)
                     p = calculator.engset_b(v, a, N)
@@ -84,7 +86,6 @@ def index():
                         f"• Вероятность блокировки p = {round(p, 6)}\n"
                         f"• Среднее число занятых каналов m = {round(m, 4)}"
                     )
-                
                 elif model == 'erlang_c':
                     p = calculator.erlang_c(v, a)
                     m = a
@@ -95,7 +96,6 @@ def index():
                         f"• Вероятность ожидания p_wait = {round(p, 6)} ({round(p*100, 2)}% вызовов попадут в очередь)\n"
                         f"• Среднее число занятых каналов m = a = {a} (все вызовы будут обслужены)"
                     )
-                
                 elif model == 'erlang_a':
                     theta = float(form.theta.data or 0.1)
                     res = calculator.erlang_a(v, a, theta)
@@ -107,7 +107,6 @@ def index():
                         f"• Вероятность ухода из очереди p_ab = {res['p_ab']}\n"
                         f"• Среднее число занятых каналов m = {res['m']}"
                     )
-                
                 elif model == 'batch':
                     k = int(form.k.data or 1)
                     p = calculator.batch_erlang_b(v, a, k)
@@ -120,12 +119,22 @@ def index():
                         f"• Вероятность блокировки p = {round(p, 6)}\n"
                         f"• Среднее число занятых каналов m = {round(m, 4)}"
                     )
-            
+                elif model == 'reservation':
+                    r_val = int(form.r.data or 0)
+                    p, m = calculator.reservation_erlang_b(v, r_val, a)
+                    result = {'p': p, 'm': m}
+                    explanation = (
+                        f"Модель с резервированием (v = {v}, r = {r_val}).\n"
+                        f"Эффективных каналов: {v - r_val}.\n"
+                        f"• Вероятность блокировки p = E({v - r_val}, {a}) = {p}\n"
+                        f"• Среднее число занятых каналов m = {m}"
+                    )
+
             # ========== ОБРАТНАЯ ЗАДАЧА 1 (v по p) ==========
             elif task == 'inverse_p':
                 a = float(form.a.data or 0)
                 p_target = float(form.p_target.data or 0.01)
-                
+
                 if model == 'erlang':
                     v_opt = calculator.erlang_b_inv_v_p(a, p_target)
                     p_actual = calculator.erlang_b(v_opt, a)
@@ -136,7 +145,6 @@ def index():
                         f"• При v = {v_opt}: p = {round(p_actual, 6)} ≤ {p_target} ✓\n"
                         f"• При v = {v_opt-1}: p = {round(calculator.erlang_b(v_opt-1, a), 6)} > {p_target}"
                     )
-                
                 elif model == 'engset':
                     N = int(form.N.data or 1)
                     v_opt = calculator.engset_inv_v_p(a, N, p_target)
@@ -147,7 +155,6 @@ def index():
                         f"Требуется p ≤ {p_target}. Подбор дал v = {v_opt} каналов.\n\n"
                         f"При этом p = {round(p_actual, 6)} ≤ {p_target} ✓"
                     )
-                
                 elif model == 'erlang_c':
                     v_opt = calculator.erlang_c_inv_v_p(a, p_target)
                     p_actual = calculator.erlang_c(v_opt, a)
@@ -157,7 +164,6 @@ def index():
                         f"Требуется p_wait ≤ {p_target}. Подбор дал v = {v_opt} каналов.\n\n"
                         f"При этом p_wait = {round(p_actual, 6)} ≤ {p_target} ✓"
                     )
-                
                 elif model == 'erlang_a':
                     theta = float(form.theta.data or 0.1)
                     v_opt = calculator.erlang_a_inv_v_p(a, theta, p_target)
@@ -168,7 +174,6 @@ def index():
                         f"Требуется p_wait ≤ {p_target}. Подбор дал v = {v_opt} каналов.\n\n"
                         f"При этом p_wait = {res['p_wait']} ≤ {p_target} ✓"
                     )
-                
                 elif model == 'batch':
                     k = int(form.k.data or 1)
                     v_opt = calculator.batch_inv_v_p(a, k, p_target)
@@ -180,12 +185,22 @@ def index():
                         f"Требуется p ≤ {p_target}. Подбор дал v = {v_opt} каналов.\n\n"
                         f"При этом p = {round(p_actual, 6)} ≤ {p_target} ✓"
                     )
-            
+                elif model == 'reservation':
+                    v_opt, r_opt = calculator.reservation_find_v_r(a, p_target)
+                    if v_opt is not None:
+                        result = {'v_opt': v_opt, 'r_opt': r_opt}
+                        explanation = (
+                            f"Модель с резервированием: подобраны v = {v_opt}, r = {r_opt}.\n"
+                            f"Эффективных каналов {v_opt - r_opt}, p = E({v_opt - r_opt}, {a}) ≤ {p_target}."
+                        )
+                    else:
+                        result = {'error': 'Решение не найдено в диапазоне v ≤ 100'}
+
             # ========== ОБРАТНАЯ ЗАДАЧА 2 (v по m) ==========
             elif task == 'inverse_m':
                 a = float(form.a.data or 0)
                 m_target = float(form.m_target.data or 0)
-                
+
                 if model == 'erlang':
                     v_opt = calculator.erlang_b_inv_v_m(a, m_target)
                     p = calculator.erlang_b(v_opt, a)
@@ -197,7 +212,6 @@ def index():
                         f"• При v = {v_opt}: m = {a}·(1-{round(p, 4)}) = {round(m_actual, 4)} ≥ {m_target} ✓\n"
                         f"• При v = {v_opt-1}: m = {round(a * (1 - calculator.erlang_b(v_opt-1, a)), 4)} < {m_target}"
                     )
-                
                 elif model == 'engset':
                     N = int(form.N.data or 1)
                     v_opt = calculator.engset_inv_v_m(a, N, m_target)
@@ -206,7 +220,6 @@ def index():
                         f"Модель Энгсета: N = {N}, a = {a} Эрл/источник.\n"
                         f"Требуется m ≥ {m_target}. Подбор дал v = {v_opt} каналов."
                     )
-                
                 elif model == 'erlang_c':
                     if m_target <= a:
                         min_v = int(a) + 1
@@ -222,7 +235,6 @@ def index():
                             f"В модели Эрланг C m всегда равно a = {a}.\n"
                             f"Нельзя получить m = {m_target} > {a}."
                         )
-                
                 elif model == 'erlang_a':
                     theta = float(form.theta.data or 0.1)
                     v_opt = calculator.erlang_a_inv_v_m(a, theta, m_target)
@@ -233,7 +245,6 @@ def index():
                         f"Требуется m ≥ {m_target}. Подбор дал v = {v_opt} каналов.\n\n"
                         f"При этом m = {res['m']} ≥ {m_target} ✓"
                     )
-                
                 elif model == 'batch':
                     k = int(form.k.data or 1)
                     v_opt = calculator.batch_inv_v_m(a, k, m_target)
@@ -246,13 +257,26 @@ def index():
                         f"Требуется m ≥ {m_target}. Подбор дал v = {v_opt} каналов.\n\n"
                         f"При этом m = {round(m_actual, 4)} ≥ {m_target} ✓"
                     )
-            
+                elif model == 'reservation':
+                    result = {'error': 'Обратная задача 2 для резервирования не реализована'}
+
             # ========== ОБРАТНАЯ ЗАДАЧА 3 (доля выгрузки) ==========
             elif task == 'overload':
                 v = int(form.v.data or 0)
                 p_measured = float(form.p_measured.data or 0)
                 p_norm = float(form.p_norm.data or 0.01)
-                
+
+                # Проверка на отсутствие перегрузки
+                if p_measured <= p_norm:
+                    readable = "Доля выгружаемой нагрузки: 0.00%"
+                    explanation = (
+                        f"Измеренная вероятность p* = {p_measured} не превышает "
+                        f"норматив p = {p_norm}.\nПерегрузка отсутствует, выгрузка не требуется."
+                    )
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return jsonify(readable=readable, explanation=explanation)
+                    return render_template('index.html', form=form, readable=readable, explanation=explanation)
+
                 if model == 'erlang':
                     a_meas = calculator.find_a_erlang_b(v, p_measured)
                     a_norm = calculator.find_a_erlang_b(v, p_norm)
@@ -265,7 +289,6 @@ def index():
                         f"Чтобы снизить потери с {p_measured} до {p_norm}, нужно выгрузить:\n"
                         f"({round(a_meas, 2)} - {round(a_norm, 2)}) / {round(a_meas, 2)} = {round(reduction, 2)}% трафика"
                     )
-                
                 elif model == 'engset':
                     N = int(form.N.data or 1)
                     a_meas = calculator.find_a_engset(v, N, p_measured)
@@ -278,7 +301,6 @@ def index():
                         f"• p = {p_norm} → a_норм = {round(a_norm, 4)} Эрл/источник\n\n"
                         f"Доля выгрузки = {round(reduction, 2)}%"
                     )
-                
                 elif model == 'erlang_c':
                     a_meas = calculator.find_a_erlang_c(v, p_measured)
                     a_norm = calculator.find_a_erlang_c(v, p_norm)
@@ -290,7 +312,6 @@ def index():
                         f"• p_wait = {p_norm} → a_норм = {round(a_norm, 2)} Эрл\n\n"
                         f"Доля выгрузки = {round(reduction, 2)}%"
                     )
-                
                 elif model == 'erlang_a':
                     theta = float(form.theta.data or 0.1)
                     a_meas = calculator.find_a_erlang_a(v, theta, p_measured)
@@ -303,7 +324,6 @@ def index():
                         f"• p = {p_norm} → a_норм = {round(a_norm, 2)} Эрл\n\n"
                         f"Доля выгрузки = {round(reduction, 2)}%"
                     )
-                
                 elif model == 'batch':
                     k = int(form.k.data or 1)
                     a_meas = calculator.find_a_batch(v, k, p_measured)
@@ -316,20 +336,28 @@ def index():
                         f"• p = {p_norm} → a_норм = {round(a_norm, 2)} Эрл\n\n"
                         f"Доля выгрузки = {round(reduction, 2)}%"
                     )
-            
+                elif model == 'reservation':
+                    r_val = int(form.r.data or 0)
+                    reduction = calculator.reservation_overload(v, r_val, p_measured, p_norm)
+                    result = {'reduction_percent': round(reduction, 2)}
+                    explanation = (
+                        f"Модель с резервированием: v = {v}, r = {r_val}.\n"
+                        f"Эффективных каналов {v - r_val}. Доля выгрузки = {round(reduction, 2)}%."
+                    )
+
             if result and 'error' not in result:
                 readable = format_readable(result)
             elif result and 'error' in result:
                 readable = f"Ошибка: {result['error']}"
-                
+
         except Exception as e:
             result = {'error': str(e)}
             explanation = f"Произошла ошибка при расчёте: {str(e)}"
             readable = f"Ошибка: {str(e)}"
-            
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify(readable=readable, explanation=explanation)
-    
+
     return render_template('index.html', form=form, readable=readable, explanation=explanation)
 
 
@@ -338,7 +366,7 @@ def graph():
     params = session.get('graph_params', {})
     if not params:
         return "Нет данных для графика. Выполните расчёт сначала.", 400
-    
+
     model = params.get('model', 'erlang')
     task = params.get('task', 'direct')
     a = params.get('a', 5)
@@ -346,39 +374,43 @@ def graph():
     N = params.get('N', 20)
     k = params.get('k', 2)
     theta = params.get('theta', 0.1)
+    r = params.get('r', 0)
     p_target = params.get('p_target')
     m_target = params.get('m_target')
-    
+
     if task in ['inverse_p', 'inverse_m']:
         max_v = v + 20
     else:
         max_v = v + 15
-    
+
     if model == 'engset':
-        graph_data = calculator.get_graph_data(model, a, max_v, N=N, k=None, theta=None)
+        graph_data = calculator.get_graph_data(model, a, max_v, N=N)
     elif model == 'erlang_a':
-        graph_data = calculator.get_graph_data(model, a, max_v, N=None, k=None, theta=theta)
+        graph_data = calculator.get_graph_data(model, a, max_v, theta=theta)
     elif model == 'batch':
-        graph_data = calculator.get_graph_data(model, a, max_v, N=None, k=k, theta=None)
+        graph_data = calculator.get_graph_data(model, a, max_v, k=k)
+    elif model == 'reservation':
+        graph_data = calculator.get_graph_data(model, a, max_v, r=r)
     else:
-        graph_data = calculator.get_graph_data(model, a, max_v, N=None, k=None, theta=None)
-    
+        graph_data = calculator.get_graph_data(model, a, max_v)
+
     model_names = {
         'erlang': 'Эрланг B',
         'engset': f'Энгсет (N={N})',
         'erlang_c': 'Эрланг C',
         'erlang_a': f'Эрланг A (θ={theta})',
-        'batch': f'Групповое поступление (k={k})'
+        'batch': f'Групповое поступление (k={k})',
+        'reservation': f'Резервирование (r={r})'
     }
-    
+
     task_names = {
         'direct': 'Прямая задача',
         'inverse_p': f'Обратная задача: подбор v по p = {p_target}',
         'inverse_m': f'Обратная задача: подбор v по m = {m_target}',
         'overload': 'Обратная задача: доля выгрузки'
     }
-    
-    return render_template('graph.html', 
+
+    return render_template('graph.html',
                           graph_data=json.dumps(graph_data),
                           model=model_names.get(model, model),
                           task=task_names.get(task, ''),
@@ -395,35 +427,39 @@ def compare():
     N = params.get('N', 20)
     k = params.get('k', 2)
     theta = params.get('theta', 0.1)
-    
-    models = ['erlang', 'engset', 'erlang_c', 'erlang_a', 'batch']
+    r = params.get('r', 0)
+
+    models = ['erlang', 'engset', 'erlang_c', 'erlang_a', 'batch', 'reservation']
     model_names = {
         'erlang': 'Эрланг B (блокировка)',
         'engset': f'Энгсет (N={N})',
         'erlang_c': 'Эрланг C (ожидание)',
         'erlang_a': f'Эрланг A (θ={theta})',
-        'batch': f'Групповое (k={k})'
+        'batch': f'Групповое (k={k})',
+        'reservation': f'Резервирование (r={r})'
     }
-    
+
     compare_data = {}
     max_v = v + 20
-    
+
     for model in models:
         if model == 'engset':
-            data = calculator.get_graph_data(model, a, max_v, N=N, k=None, theta=None)
+            data = calculator.get_graph_data(model, a, max_v, N=N)
         elif model == 'erlang_a':
-            data = calculator.get_graph_data(model, a, max_v, N=None, k=None, theta=theta)
+            data = calculator.get_graph_data(model, a, max_v, theta=theta)
         elif model == 'batch':
-            data = calculator.get_graph_data(model, a, max_v, N=None, k=k, theta=None)
+            data = calculator.get_graph_data(model, a, max_v, k=k)
+        elif model == 'reservation':
+            data = calculator.get_graph_data(model, a, max_v, r=r)
         else:
-            data = calculator.get_graph_data(model, a, max_v, N=None, k=None, theta=None)
-        
+            data = calculator.get_graph_data(model, a, max_v)
+
         compare_data[model] = {
             'name': model_names[model],
             'v': data['v'],
             'p': data['p']
         }
-    
-    return render_template('compare.html', 
+
+    return render_template('compare.html',
                           compare_data=json.dumps(compare_data),
-                          a=a, N=N, k=k, theta=theta)
+                          a=a, N=N, k=k, theta=theta, r=r)

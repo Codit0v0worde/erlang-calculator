@@ -42,6 +42,7 @@
     font-size: 1rem;
     color: #f0f0f0;
     transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -67,10 +68,14 @@
     margin-bottom: 6px;
     font-weight: 500;
     color: #ccc;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .input-panel input {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 12px 15px;
     background: #0f1214;
     border: 2px solid #2e353b;
@@ -200,7 +205,7 @@
     color: #ffc107;
 }
 
-/* История */
+/* История (оставлена для совместимости, если понадобится) */
 .history-header {
     font-weight: 700;
     font-size: 1.2rem;

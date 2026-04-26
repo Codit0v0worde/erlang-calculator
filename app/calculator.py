@@ -203,12 +203,49 @@ def find_a_batch(v, k, p_target, max_a=1000.0, step=0.01):
         a += step
     return max_a
 
+# ---------- Модель с резервированием ----------
+def reservation_erlang_b(v, r, a):
+    """Прямая задача для модели с резервированием: p = E(v - r, a)"""
+    if v <= r:
+        return 1.0, 0.0
+    eff_v = v - r
+    p = erlang_b(eff_v, a)
+    m = a * (1 - p)
+    return round(p, 6), round(m, 4)
+
+def reservation_find_v_r(a, p_target, max_v=100, max_r=None):
+    """Подбор v и r, чтобы p ≤ p_target. Возвращает (v, r) или (None, None)"""
+    if max_r is None:
+        max_r = max_v // 2
+    for v in range(1, max_v + 1):
+        for r in range(0, min(v, max_r + 1)):
+            eff_v = v - r
+            if eff_v == 0:
+                continue
+            p = erlang_b(eff_v, a)
+            if p <= p_target:
+                return v, r
+    return None, None
+
+def reservation_overload(v, r, p_measured, p_norm):
+    """Доля выгрузки для модели с резервированием"""
+    if p_measured <= p_norm:
+        return 0.0
+    eff_v = v - r
+    if eff_v <= 0:
+        return 0.0
+    a_meas = find_a_erlang_b(eff_v, p_measured)
+    a_norm = find_a_erlang_b(eff_v, p_norm)
+    if a_meas == 0:
+        return 0.0
+    return (a_meas - a_norm) / a_meas * 100
+
 # ---------- Данные для графиков ----------
-def get_graph_data(model, a, max_v, N=None, k=None, theta=None):
+def get_graph_data(model, a, max_v, N=None, k=None, theta=None, r=None):
     v_values = list(range(1, max_v + 1))
     p_values = []
     m_values = []
-    
+
     for v in v_values:
         if model == 'erlang':
             p = erlang_b(v, a)
@@ -230,10 +267,19 @@ def get_graph_data(model, a, max_v, N=None, k=None, theta=None):
         elif model == 'batch' and k:
             p = batch_erlang_b(v, a, k)
             m = a * k * (1 - p)
+        elif model == 'reservation':
+            r_graph = r if r is not None else 0
+            eff_v = v - r_graph
+            if eff_v > 0:
+                p = erlang_b(eff_v, a)
+                m = a * (1 - p)
+            else:
+                p = 1.0
+                m = 0.0
         else:
             p = 0
             m = 0
         p_values.append(round(p, 6))
         m_values.append(round(m, 4))
-    
+
     return {'v': v_values, 'p': p_values, 'm': m_values}

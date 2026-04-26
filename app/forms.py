@@ -8,7 +8,8 @@ class CalculatorForm(FlaskForm):
         ('engset', 'Энгсет'),
         ('erlang_c', 'Эрланг C (ожидание)'),
         ('erlang_a', 'Эрланг A (с уходами)'),
-        ('batch', 'Групповое поступление')
+        ('batch', 'Групповое поступление'),
+        ('reservation', 'С резервированием')
     ])
     task = SelectField('Задача', choices=[
         ('direct', 'Прямая (p и m)'),
@@ -21,6 +22,7 @@ class CalculatorForm(FlaskForm):
     N = IntegerField('Число источников N', validators=[Optional(), NumberRange(min=1)], render_kw={"placeholder": "например: 20"})
     k = IntegerField('Размер группы k', validators=[Optional(), NumberRange(min=1)], render_kw={"placeholder": "например: 2"})
     theta = FloatField('Интенсивность уходов θ', validators=[Optional(), NumberRange(min=0)], render_kw={"placeholder": "например: 0.1"})
+    r = IntegerField('Резервных каналов r', validators=[Optional(), NumberRange(min=0)], render_kw={"placeholder": "например: 2"})
     p_target = FloatField('Целевая вероятность p', validators=[Optional(), NumberRange(min=0, max=1)], render_kw={"placeholder": "например: 0.01"})
     m_target = FloatField('Целевое среднее m', validators=[Optional(), NumberRange(min=0)], render_kw={"placeholder": "например: 4.5"})
     p_measured = FloatField('Измеренная вероятность p*', validators=[Optional(), NumberRange(min=0, max=1)], render_kw={"placeholder": "например: 0.05"})

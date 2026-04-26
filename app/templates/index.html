@@ -16,7 +16,7 @@
                 Калькулятор характеристик пропускной способности
             </h1>
             <p style="color: #b0b0b0; margin-top: 0.5rem;">
-                Эрланг B · Энгсет · Эрланг C · Эрланг A · Групповое поступление
+                Эрланг B · Энгсет · Эрланг C · Эрланг A · Групповое поступление · Резервирование
             </p>
         </header>
 
@@ -33,9 +33,31 @@
                         {{ form.task(id="task", class="form-control") }}
                     </div>
                 </div>
+
+                <!-- Выпадающий список примеров -->
+                <div class="form-group">
+                    <label><i class="fa fa-flask"></i> Примеры</label>
+                    <select id="examples" class="form-control" onchange="loadExample(this.value)">
+                        <option value="">-- выберите пример --</option>
+                        <option value="erlang-direct">Эрланг B: прямая, a=5, v=10</option>
+                        <option value="erlang-inverse-p">Эрланг B: обратная 1, a=10, p=0.01</option>
+                        <option value="erlang-overload">Эрланг B: перегрузка, p*=0.05, p=0.01</option>
+                        <option value="erlang-overload-noloss">Эрланг B: нет перегрузки (p*=0.008, p=0.01)</option>
+                        <option value="engset-direct">Энгсет: прямая, a=0.1, v=5, N=20</option>
+                        <option value="erlang-c-direct">Эрланг C: прямая, a=8, v=10</option>
+                        <option value="erlang-a-direct">Эрланг A: прямая, a=5, v=10, θ=0.1</option>
+                        <option value="batch-direct">Групповое: прямая, a=2, v=5, k=2</option>
+                        <option value="reservation-inverse-p">Резервирование: подбор v,r, a=7, p=0.01</option>
+                    </select>
+                </div>
+
                 <div id="input-fields" class="input-panel"></div>
-                <div class="form-actions">
+
+                <div class="form-actions" style="display: flex; gap: 10px; justify-content: center;">
                     {{ form.submit(class="btn btn-calculate") }}
+                    <button type="button" class="btn btn-calculate" style="background: #4a555e;" onclick="clearForm()">
+                        <i class="fa fa-eraser"></i> Очистить
+                    </button>
                 </div>
             </form>
             
